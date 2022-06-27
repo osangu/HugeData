@@ -77,7 +77,9 @@ class Scrawler:
                     job_amount_list.append(100 * cnt + amount)
                     break
 
-        return job_amount_list
+        return (
+            self._list_editor.change_for_usage('decode', 'wanted', lang_list), job_amount_list
+        )
 
     @property
     def repository_amount_list(self):
@@ -99,23 +101,28 @@ class Scrawler:
             )
             sleep(8)
 
-        return repository_amount_list
+        return (
+            self._list_editor.change_for_usage('decode', 'github', language_list), repository_amount_list
+        )
 
     @property
     def issue_amount_list(self):
         language_list = self._list_editor.change_for_usage('encode', 'github', self.language_list)
-        print(len(language_list), language_list)
         issue_amount_list = []
+
         for language in language_list:
             request = get(f'https://github.com/search?l={language}&q={language}&type=Issues').text
 
             soup = str(Bs(request, 'lxml').find('body').find_all('h3')[-1]).translate(
-                str.maketrans('<h3></h3>,issues \n', ' ' * len('<h3></h3>,issues \n')))
+                str.maketrans('<h3></h3>,issues \n', ' ' * len('<h3></h3>,issues \n'))
+            )
 
             issue_amount_list.append(int(soup.replace(' ', '')))
             sleep(8)
 
-        return issue_amount_list
+        return (
+            self._list_editor.change_for_usage('decode', 'github', language_list), issue_amount_list
+        )
 
     @property
     def commit_amount_list(self):
@@ -130,9 +137,11 @@ class Scrawler:
             finish = soup.find(' available')
 
             commit_amount_list.append(
-                int(soup[start:finish].replace(',',''))
+                int(soup[start:finish].replace(',', ''))
             )
 
             sleep(8)
 
-        return commit_amount_list
+        return (
+            self._list_editor.change_for_usage('decode', 'github', language_list), commit_amount_list
+        )
