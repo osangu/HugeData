@@ -8,6 +8,8 @@ from bs4 import BeautifulSoup as Bs
 import re
 from time import sleep
 
+import numpy as np
+
 
 class LanguageListEditor:
 
@@ -81,6 +83,9 @@ class Scrawler:
             self._list_editor.change_for_usage('decode', 'wanted', lang_list), job_amount_list
         )
 
+    # ['Python', 'Java', 'JavaScript', 'PHP', 'TypeScript', 'Matlab', 'Go', 'Rust', 'Ruby', 'C/C++', 'C#', 'R', 'Swift', 'Kotlin']
+    # [81, 267, 18, 72, 18, 1, 157, 2, 2, 58, 39, 108, 371, 236]
+
     @property
     def repository_amount_list(self):
         language_list = self._list_editor.change_for_usage('encode', 'github', self.language_list)
@@ -105,6 +110,9 @@ class Scrawler:
             self._list_editor.change_for_usage('decode', 'github', language_list), repository_amount_list
         )
 
+    # ['Python', 'Java', 'JavaScript', 'PHP', 'R', 'TypeScript', 'Objective-C', 'Swift', 'Matlab', 'Kotlin', 'Go', 'Rust', 'Ruby', 'C/C++', 'C#']
+    # [5652840, 5387788, 1544826, 7680111, 48748297, 297175, 1338706, 1230230, 422068, 488155, 46970659, 1259213, 3764969, 87305050, 78692273]
+
     @property
     def issue_amount_list(self):
         language_list = self._list_editor.change_for_usage('encode', 'github', self.language_list)
@@ -123,6 +131,9 @@ class Scrawler:
         return (
             self._list_editor.change_for_usage('decode', 'github', language_list), issue_amount_list
         )
+
+    # ['Python', 'Java', 'JavaScript', 'PHP', 'R', 'TypeScript', 'Objective-C', 'Swift', 'Matlab', 'Kotlin', 'Go', 'Rust', 'Ruby', 'C/C++', 'C#']
+    # [52101, 47072, 1288478, 2688859, 25571, 262941, 1945, 2550, 27290, 198497, 251298, 576679, 2887775, 1190650, 5728]
 
     @property
     def commit_amount_list(self):
@@ -145,3 +156,42 @@ class Scrawler:
         return (
             self._list_editor.change_for_usage('decode', 'github', language_list), commit_amount_list
         )
+    # ['Python', 'Java', 'JavaScript', 'PHP', 'R', 'TypeScript', 'Objective-C', 'Swift', 'Matlab', 'Kotlin', 'Go', 'Rust', 'Ruby', 'C/C++', 'C#']
+    # [1663241, 1440823, 715852, 536107, 203691, 246494, 17831, 192095, 65333, 156212, 413159, 144984, 289751, 276793, 200423]
+
+
+class GraphPrinter:
+
+    @staticmethod
+    def print_pie_graph(title, language_list, amount_list):
+        fig, ax = plt.subplots(figsize=(15, 10), subplot_kw=dict(aspect="equal"))
+        wedges, texts = ax.pie(amount_list, wedgeprops=dict(width=0.5), startangle=40,
+                               counterclock=True, )
+        bbox_props = dict(fc='w', ec='k', lw=0.72)
+        kw = dict(arrowprops=dict(arrowstyle="-"),
+                  bbox=bbox_props, zorder=0, va="center")
+
+        for i, p in enumerate(wedges):
+            ang = (p.theta2 - p.theta1) / 2. + p.theta1
+            y = np.sin(np.deg2rad(ang))
+            x = np.cos(np.deg2rad(ang))
+            horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
+            connectionstyle = "angle,angleA=0,angleB={}".format(ang)
+            kw["arrowprops"].update({"connectionstyle": connectionstyle})
+            ax.annotate(language_list[i], xy=(x, y), xytext=(1.5 * np.sign(x), 1.4 * y),
+                        horizontalalignment=horizontalalignment, **kw)
+        ax.set_title(title)
+        plt.show()
+
+    @staticmethod
+    def print_bar_graph(title, color, property_list, amount_list):
+        x = np.arange(len(amount_list))
+        print(x, title)
+        plt.figure(figsize=(15, 10))
+        plt.xticks(x, property_list, rotation=45)
+        bar = plt.bar(x, amount_list, color=color)
+        plt.title(title)
+        for rect in bar:
+            height = rect.get_height()
+            plt.text(rect.get_x() + rect.get_width() / 2.0, height, height, ha='center', va='bottom', size=12)
+        plt.show()
